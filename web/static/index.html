@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HoodShop</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#090909;color:#fff;font-family:Arial}.wrap{max-width:1000px;margin:auto;padding:15px}.head{display:flex;justify-content:space-between;align-items:center}.logo{font-size:28px;font-weight:900}.btn{border:0;border-radius:9px;padding:9px;margin:3px;background:#222;color:#fff}.active{background:#fff;color:#000}.cats{white-space:nowrap;overflow:auto;margin:20px 0}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card,.cart{background:#161616;border-radius:15px;padding:12px}.pic{height:170px;background:#252525;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:60px}.add,.order{width:100%;border:0;border-radius:9px;padding:11px;font-weight:bold}.cart{margin-top:20px}.item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}.qty button{border:0;background:#333;color:#fff;border-radius:6px;padding:5px 10px}.total{display:flex;justify-content:space-between;font-size:20px;font-weight:bold;margin:15px 0}.order{background:#fff;color:#000}@media(max-width:700px){.grid{grid-template-columns:repeat(2,1fr)}.pic{height:140px}} 
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="head">
+<div class="logo">HOODSHOP</div>
+<div>
+<button class="btn active" onclick="lang('uz',this)">🇺🇿</button>
+<button class="btn" onclick="lang('ru',this)">🇷🇺</button>
+<button class="btn" onclick="lang('en',this)">🇬🇧</button>
+</div>
+</div>
+
+<div class="cats">
+<button class="btn active" onclick="cat('all',this)">All</button>
+<button class="btn" onclick="cat('t',this)">T-Shirts</button>
+<button class="btn" onclick="cat('h',this)">Hoodies</button>
+<button class="btn" onclick="cat('p',this)">Pants</button>
+<button class="btn" onclick="cat('a',this)">Accessories</button>
+</div>
+
+<div id="products" class="grid"></div>
+
+<div class="cart">
+<h2 id="ct">🛒 Savat</h2>
+<div id="items"></div>
+<div class="total"><span id="tt">Jami:</span><span id="sum">0 so‘m</span></div>
+<button class="order" id="ob" onclick="order()">📦 Buyurtma berish</button>
+</div>
+
+</div>
+
+<script>
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand()}
+
+const P=[
+[1,"Oversize T-Shirt",149000,"t","👕"],
+[2,"Black Street Hoodie",299000,"h","🧥"],
+[3,"Urban Cargo Pants",349000,"p","👖"],
+[4,"Classic Hoodie",279000,"h","🧥"],
+[5,"Street T-Shirt",159000,"t","👕"],
+[6,"Wide Cargo",329000,"p","👖"],
+[7,"Urban Cap",99000,"a","🧢"],
+[8,"Street Bag",179000,"a","🎒"]
+];
+
+let C={};
+
+function show(list=P){
+products.innerHTML=list.map(x=>`
+<div class="card">
+<div class="pic">${x[4]}</div>
+<h3>${x[1]}</h3>
+<b>${x[2].toLocaleString()} so‘m</b><br><br>
+<button class="add" onclick="add(${x[0]})">🛒 Savatga qo‘shish</button>
+</div>`).join("");
+}
+
+function add(id){C[id]=(C[id]||0)+1;cart()}
+function plus(id){C[id]++;cart()}
+function minus(id){C[id]--;if(C[id]<=0)delete C[id];cart()}
+
+function cart(){
+let total=0,html="";
+for(let id in C){
+let x=P.find(a=>a[0]==id),q=C[id];
+total+=x[2]*q;
+html+=`<div class="item"><span>${x[4]} ${x[1]}<br>${(x[2]*q).toLocaleString()} so‘m</span><span class="qty"><button onclick="minus(${id})">−</button> ${q} <button onclick="plus(${id})">+</button></span></div>`;
+}
+items.innerHTML=html||"<center>Savat bo‘sh</center>";
+sum.innerText=total.toLocaleString()+" so‘m";
+}
+
+function cat(c,b){
+document.querySelectorAll(".cats .btn").forEach(x=>x.classList.remove("active"));
+b.classList.add("active");
+show(c=="all"?P:P.filter(x=>x[3]==c));
+}
+
+function lang(l,b){
+document.querySelectorAll(".head .btn").forEach(x=>x.classList.remove("active"));
+b.classList.add("active");
+if(l=="uz"){ct.innerText="🛒 Savat";tt.innerText="Jami:";ob.innerText="📦 Buyurtma berish"}
+if(l=="ru"){ct.innerText="🛒 Корзина";tt.innerText="Итого:";ob.innerText="📦 Оформить заказ"}
+if(l=="en"){ct.innerText="🛒 Cart";tt.innerText="Total:";ob.innerText="📦 Place order"}
+}
+
+function order(){
+let data=[];
+for(let id in C){
+let x=P.find(a=>a[0]==id);
+data.push({id:x[0],name:x[1],price:x[2],quantity:C[id]});
+}
+if(!data.length){alert("Savat bo‘sh!");return}
+if(tg&&tg.sendData)tg.sendData(JSON.stringify({items:data}));
+else alert("Buyurtma tayyor!");
+}
+
+show();
+cart();
+</script>
+</body>
+</html>
